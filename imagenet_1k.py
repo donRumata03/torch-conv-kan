@@ -55,7 +55,7 @@ def unpack_imagenet(dataset, cache_dir='./data/imagenet1k_unpacked'):
 
 
 def get_data(cfg):
-    dataset = load_dataset("imagenet-1k", cache_dir='~/data/imagenet1k', use_auth_token=True, trust_remote_code=True)
+    dataset = load_dataset("imagenet-1k", cache_dir='~/data/imagenet1k', trust_remote_code=True)
 
     # if cfg.unpack_data:
     #     train_data, validation_data, test_data = unpack_imagenet(dataset, cache_dir='./data/imagenet1k_unpacked')
