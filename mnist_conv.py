@@ -367,13 +367,78 @@ def get_8simple_conv_model(num_classes, input_channels):
                            input_channels=input_channels, groups=4)
 
 
+class GeneratedModel(nn.Module):
+    def __init__(self, num_classes, input_channels=3, input_geometry=(32, 32)):
+        super(GeneratedModel, self).__init__()
+        self.features = nn.Sequential(
+            nn.Conv2d(3, 64, kernel_size=5, stride=1, padding=[2, 2]),
+            nn.Softplus(),
+            nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=[1, 1]),
+            nn.BatchNorm2d(128, momentum=0.99, eps=0.001),
+            nn.Softsign(),
+            nn.Conv2d(128, 128, kernel_size=5, stride=1, padding=[2, 2]),
+            nn.Tanh(),
+            nn.Conv2d(128, 128, kernel_size=7, stride=1, padding=3),
+            nn.BatchNorm2d(128, momentum=0.99, eps=0.001),
+            nn.Softsign(),
+            nn.AvgPool2d(kernel_size=2),
+            nn.Conv2d(128, 128, kernel_size=5, stride=1, padding=2),
+            nn.ELU(),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Conv2d(128, 256, kernel_size=5, stride=1, padding=1),
+            nn.BatchNorm2d(256, momentum=0.99, eps=0.001),
+            nn.Sigmoid(),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Flatten()
+        )
+
+        # Create a dummy input to compute output dimensions
+        example_input = torch.randn(1, input_channels, *input_geometry)
+
+        # Determine convolutional output geometry before flattening if possible
+        modules = list(self.features.children())
+        if modules and isinstance(modules[-1], nn.Flatten):
+            conv_features = nn.Sequential(*modules[:-1])
+        else:
+            conv_features = self.features
+        conv_output = conv_features(example_input)
+
+        # Flattened features size for the classifier:
+        flattened_features = self.features(example_input).shape[1]
+        self.classifier = nn.Linear(flattened_features, num_classes)
+
+        # Utility to count parameters
+        def count_parameters(model):
+            return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+        conv_params = count_parameters(self.features)
+        classifier_params = count_parameters(self.classifier)
+        total_params = count_parameters(self)
+
+        print(
+            f"Using flattened features: {flattened_features}; conv parameters: {conv_params}; classifier parameters: {classifier_params}; total: {total_params}")
+
+        # Print last convolutional layer geometry if output is 4D
+        if conv_output.dim() == 4:
+            # conv_output shape: [batch, channels, height, width]
+            channels, height, width = conv_output.shape[1], conv_output.shape[2], conv_output.shape[3]
+            print(f"Last conv layer output size: channels={channels}, height={height}, width={width}")
+        else:
+            print(f"Unexpected conv output shape: {conv_output.shape}")
+
+    def forward(self, x):
+        x = self.features(x)
+        x = self.classifier(x)
+        return x
+
+
 if __name__ == '__main__':
-    for dataset_name in ['MNIST', ]:
+    for dataset_name in ['CIFAR10', ]:
         # for dataset_name in ['MNIST', 'CIFAR10', 'CIFAR100']:
         #     for model_name in ['WavKAN8', 'KAN', "KALN", "FastKAN", 'KACN', 'KAGN', 'WavKAN', "Vanilla",
         #                        'KAN8', "KALN8", "FastKAN8", "KACN8", 'KAGN8', "Vanilla8"]:
         #         for dataset_name in ['MNIST', 'CIFAR10', 'CIFAR100']:
-        for model_name in ['KACN', ]:
+        for model_name in ["Custom"]:
             folder_to_save = os.path.join('experiments_v3', '_'.join([model_name.lower(), dataset_name.lower()]))
             num_classes = 100 if dataset_name == 'CIFAR100' else 10
             input_channels = 1 if dataset_name == 'MNIST' else 3
@@ -404,6 +469,8 @@ if __name__ == '__main__':
                 kan_model = get_8wavkan_model(num_classes, input_channels)
             elif model_name == 'Vanilla':
                 kan_model = get_simple_conv_model(num_classes, input_channels)
+            elif model_name == 'Custom':
+                kan_model = GeneratedModel(num_classes)
             else:
                 kan_model = get_8simple_conv_model(num_classes, input_channels)
             train_and_validate(kan_model, bs, epochs=150,
