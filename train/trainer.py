@@ -26,6 +26,7 @@ from tqdm.auto import tqdm
 
 from kan_convs import KANConv2DLayer, KALNConv2DLayer, FastKANConv2DLayer, KACNConv2DLayer, KAGNConv2DLayer, \
     WavKANConv2DLayer, BottleNeckKAGNConv2DLayer, MoEBottleNeckKAGNConv2DLayer
+from . import _hack_augment
 from .lbfgs import LBFGS
 from .losses import Dice
 from .metrics import get_metrics
@@ -180,8 +181,8 @@ def train_model(model, dataset_train, dataset_val, loss_func, cfg, dataset_test=
                           line_search_fn="strong_wolfe"
                           )
 
-    cutmix = v2.CutMix(num_classes=cfg.model.num_classes)
-    mixup = v2.MixUp(num_classes=cfg.model.num_classes)
+    cutmix = _hack_augment.CutMix(num_classes=cfg.model.num_classes)
+    mixup = _hack_augment.MixUp(num_classes=cfg.model.num_classes)
     cutmix_or_mixup = v2.RandomChoice([cutmix, mixup])
 
     train_dataloader = torch.utils.data.DataLoader(
