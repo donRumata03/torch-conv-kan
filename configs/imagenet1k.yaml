@@ -60,3 +60,5 @@ loss:
 
 visualization:
   layers: [0, 2, 5, 7, 10, 13]
+  
+use_mixup: false
