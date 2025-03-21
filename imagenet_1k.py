@@ -13,6 +13,7 @@ from torchvision.transforms.autoaugment import AutoAugmentPolicy
 from models import reskagnet50
 from train import Classification, train_model, FocalLoss
 from utils import GradCAMReporter
+from mnist_conv import GeneratedModel
 
 
 def inverse_normalize(tensor, mean, std):
@@ -118,16 +119,17 @@ def get_data(cfg):
 
 @hydra.main(version_base=None, config_path="./configs/", config_name="imagenet1k.yaml")
 def main(cfg):
-    model = reskagnet50(3,
-                    1000,
-                    groups=cfg.model.groups,
-                    degree=cfg.model.degree,
-                    dropout=cfg.model.dropout,
-                    l1_decay=cfg.model.l1_decay,
-                    dropout_linear=cfg.model.dropout_linear,
-                    width_scale=cfg.model.width_scale,
-                    affine=True
-                    )
+    # model = reskagnet50(3,
+    #                 1000,
+    #                 groups=cfg.model.groups,
+    #                 degree=cfg.model.degree,
+    #                 dropout=cfg.model.dropout,
+    #                 l1_decay=cfg.model.l1_decay,
+    #                 dropout_linear=cfg.model.dropout_linear,
+    #                 width_scale=cfg.model.width_scale,
+    #                 affine=True
+    #                 )
+    model = GeneratedModel(1000, 3, (224, 224))
 
     summary(model, (64, 3, 224, 224), device='cpu')
     dataset_train, dataset_val, dataset_test, cam_reporter = get_data(cfg)
