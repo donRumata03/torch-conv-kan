@@ -3,6 +3,7 @@ import hydra
 import json
 import torch
 import numpy as np
+import torchvision
 from PIL import Image
 import torch.nn as nn
 from datasets import load_dataset
