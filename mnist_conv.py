@@ -428,7 +428,12 @@ class GeneratedModel(nn.Module):
         else:
             print(f"Unexpected conv output shape: {conv_output.shape}")
 
-    def forward(self, x):
+    def forward(self, x, train=None):
+        if train is not None:
+            if train:
+                self.train()
+            else:
+                self.eval()
         x = self.features(x)
         x = self.classifier(x)
         return x
