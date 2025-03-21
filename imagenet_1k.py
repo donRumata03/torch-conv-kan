@@ -54,17 +54,17 @@ def unpack_imagenet(dataset, cache_dir='./data/imagenet1k_unpacked'):
 
 
 def get_data(cfg):
-    dataset = load_dataset("imagenet-1k", cache_dir='./data/imagenet1k', use_auth_token=True, trust_remote_code=True)
+    dataset = load_dataset("imagenet-1k", cache_dir='~/data/imagenet1k', use_auth_token=True, trust_remote_code=True)
 
-    if cfg.unpack_data:
-        train_data, validation_data, test_data = unpack_imagenet(dataset, cache_dir='./data/imagenet1k_unpacked')
-        del dataset
-    else:
-        train_data, validation_data, test_data = dataset['train'], dataset['validation'], dataset['test']
+    # if cfg.unpack_data:
+    #     train_data, validation_data, test_data = unpack_imagenet(dataset, cache_dir='./data/imagenet1k_unpacked')
+    #     del dataset
+    # else:
+    train_data, validation_data, test_data = dataset['train'], dataset['validation'], dataset['test']
 
 
     transforms_train = v2.Compose([
-        v2.ToImage(),
+        v2.ToImagePIL() if int(torchvision.__version__.split(".")[1]) <= 15 else v2.ToImage(),
         v2.RandomHorizontalFlip(p=0.5),
         v2.RandomResizedCrop(224, antialias=True),
         v2.RandomChoice([v2.AutoAugment(AutoAugmentPolicy.CIFAR10),
@@ -72,15 +72,19 @@ def get_data(cfg):
                          # v2.AutoAugment(AutoAugmentPolicy.SVHN),
                          # v2.TrivialAugmentWide()
                          ]),
-        v2.ToDtype(torch.float32, scale=True),
+        v2.ToTensor(),
+        v2.ToDtype(torch.float32),
+        v2.Lambda(lambda x: x / 255.0),
         v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
     transforms_val = v2.Compose([
-        v2.ToImage(),
+        v2.ToImagePIL() if int(torchvision.__version__.split(".")[1]) <= 15 else v2.ToImage(),
         v2.Resize(256, antialias=True),
         v2.CenterCrop(224),
-        v2.ToDtype(torch.float32, scale=True),
+        v2.ToTensor(),
+        v2.ToDtype(torch.float32),
+        v2.Lambda(lambda x: x / 255.0),
         v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 

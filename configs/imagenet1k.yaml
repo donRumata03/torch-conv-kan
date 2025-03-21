@@ -11,7 +11,7 @@ dataloader_num_workers: 22
 seed: 42
 
 use_torch_compile: false
-unpack_data: true
+unpack_data: false
 
 tracking_metric: 'accuracy'
 
