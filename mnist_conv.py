@@ -389,6 +389,8 @@ class GeneratedModel(nn.Module):
             nn.BatchNorm2d(256, momentum=0.99, eps=0.001),
             nn.Sigmoid(),
             nn.MaxPool2d(kernel_size=2),
+            nn.MaxPool2d(kernel_size=2),
+            nn.MaxPool2d(kernel_size=2),
             nn.Flatten()
         )
 
