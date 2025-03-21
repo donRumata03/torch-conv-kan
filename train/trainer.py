@@ -191,7 +191,7 @@ def train_model(model, dataset_train, dataset_val, loss_func, cfg, dataset_test=
         shuffle=True,
         batch_size=cfg.train_batch_size,
         num_workers=cfg.dataloader_num_workers,
-        collate_fn=lambda _batch: cutmix_or_mixup(*default_collate(_batch)) if cfg.use_mixup else default_collate
+        collate_fn=lambda _batch: cutmix_or_mixup(*default_collate(_batch)) if cfg.use_mixup else default_collate(_batch)
     )
     val_dataloader = torch.utils.data.DataLoader(
         dataset_val,
